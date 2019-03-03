@@ -2,16 +2,20 @@
   "name": "didrapsscoreenough",
   "version": "0.0.1",
   "private": true,
+  "homepage": "http://didtherapsscoreenough.xyz",
   "devDependencies": {
     "react-scripts": "2.1.5"
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "gh-pages": "^2.0.1",
     "node-sass": "^4.11.0",
     "react": "^16.8.3",
     "react-dom": "^16.8.3"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
