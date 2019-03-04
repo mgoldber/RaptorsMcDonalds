@@ -10,15 +10,16 @@ class Score extends Component {
             numberOfThrees: 0,
             gameID: 0,
             gamePlayed: true,
+            previousDayGame: false,
             nextGame: ""
         }
     }
 
-    async fetchGame(gameDay) {
+    async fetchGame(gameDay, previousDay) {
         try {
             const currentGame = await axios.get("https://www.balldontlie.io/api/v1/games", {
                 params: {
-                    "dates": [gameDay],
+                    "dates": [gameDay, previousDay],
                     "team_ids": [28]
                 }
             });
@@ -87,10 +88,15 @@ class Score extends Component {
     }
 
     renderThrees() {
-        if (this.state.numberOfThrees >= 12) {
+        if (this.state.numberOfThrees >= 12 && !this.state.previousDayGame) {
             return (<div>
                 <h4>YES!</h4>
                 <p>{this.state.numberOfThrees}</p>
+            </div>)
+        } else if (this.state.numberOfThrees >= 12 && this.state.previousDayGame) {
+            return (<div>
+                <h4>YES!</h4>
+                <p>The Raptors scored {this.state.numberOfThrees} threes yesterday. GO GET YOUR FRIES NOW!</p>
             </div>)
         } else {
             return (<div>
@@ -117,12 +123,19 @@ class Score extends Component {
     componentDidMount() {
         const currentDay = new Date();
         const formattedDay = `${currentDay.getFullYear()}-${currentDay.getMonth() + 1}-${currentDay.getDate()}`;
+        const formattedPreviousDay = `${currentDay.getFullYear()}-${currentDay.getMonth() + 1}-${currentDay.getDate() - 1}`;
+        let priorGame = false;
 
-        const gamePromise = this.fetchGame(formattedDay);
+        const gamePromise = this.fetchGame(formattedDay, formattedPreviousDay);
         gamePromise.then((result) => {
             if (result.data.data.length) {
+                if (new Date(result.data.data[0].date).getDate() !== currentDay.getDate()) {
+                    priorGame = true
+                } 
+
                 this.setState({
-                    gameID: result.data.data[0].id
+                    gameID: result.data.data[0].id,
+                    previousDayGame: priorGame
                 }, () => {
                     this.fetchThrees();
                 })
@@ -135,7 +148,6 @@ class Score extends Component {
         
         const nextGamePromise = this.fetchNextGame();
         nextGamePromise.then((result) => {
-            console.log(result);
             this.setState({
                 nextGame: result
             })
