@@ -120,19 +120,26 @@ class Score extends Component {
 
         const gamePromise = this.fetchGame(formattedDay);
         gamePromise.then((result) => {
-            this.setState({
-                gameID: result.data.data[0].id
-            }, () => {
-                this.fetchThrees();
-            })
+            if (result.data.data.length) {
+                this.setState({
+                    gameID: result.data.data[0].id
+                }, () => {
+                    this.fetchThrees();
+                })
+            } else { // If API is not returning anything, there isn't a game happening today
+                this.setState({
+                    gamePlayed: false
+                });
+            }
         });
         
         const nextGamePromise = this.fetchNextGame();
         nextGamePromise.then((result) => {
+            console.log(result);
             this.setState({
                 nextGame: result
             })
-        })
+        });
     }
 
     render() {
