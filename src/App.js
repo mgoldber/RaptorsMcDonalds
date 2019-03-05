@@ -5,7 +5,7 @@ import './styles/styles.scss';
 class App extends Component {
   render() {
     return (
-      <main>
+      <main className="wrapper">
         <h1>Did the raps score enough?</h1>
         <Score />
 

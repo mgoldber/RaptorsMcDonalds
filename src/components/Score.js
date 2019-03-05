@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import moment from 'moment';
+import { BALLDONTLIEGAME_API_URL, BALLDONTLIESTAT_API_URL } from '../constants/balldontlie_api';
+import { RAPTORSID, THREESNEEDED } from '../constants/raptors';
+import { PRESENTDAYFORMATTED, YESTERDAYFORMATTED, TOMORROWFORMATTED, DAYAFTERTOMORROWFORMATTED } from '../constants/date';
 
 class Score extends Component {
 
@@ -15,12 +19,12 @@ class Score extends Component {
         }
     }
 
-    async fetchGame(gameDay, previousDay) {
+    async fetchGame() {
         try {
-            const currentGame = await axios.get("https://www.balldontlie.io/api/v1/games", {
+            const currentGame = await axios.get(`${BALLDONTLIEGAME_API_URL}`, {
                 params: {
-                    "dates": [gameDay, previousDay],
-                    "team_ids": [28]
+                    "dates": [`${PRESENTDAYFORMATTED}`, `${YESTERDAYFORMATTED}`],
+                    "team_ids": [RAPTORSID]
                 }
             });
             return currentGame;
@@ -31,7 +35,7 @@ class Score extends Component {
 
     async fetchThrees() {
         try {
-            const numberOfThrees = await axios.get("https://www.balldontlie.io/api/v1/stats", {
+            const numberOfThrees = await axios.get(`${BALLDONTLIESTAT_API_URL}`, {
                 params: {
                     "game_ids": [this.state.gameID],
                 }
@@ -61,23 +65,18 @@ class Score extends Component {
     }
 
     async fetchNextGame() {
-        try {
-            const currentYear = new Date().getFullYear();
-            const currentMonth = new Date().getMonth() + 1;
-            const currentDay = new Date().getUTCDate();
-
-            const allGames = await axios.get("https://www.balldontlie.io/api/v1/games", {
+        try {            
+            const allGames = await axios.get(`${BALLDONTLIEGAME_API_URL}`, {
                 params: {
-                    "team_ids": [28],
-                    "seasons": [currentYear - 1],
-                    "dates": [`${currentYear}-${currentMonth}-${currentDay}`, `${currentYear}-${currentMonth}-${currentDay + 1}`, `${currentYear}-${currentMonth}-${currentDay + 2}`]
+                    "team_ids": [RAPTORSID],
+                    "seasons": [moment().subtract(1, 'year').year()],
+                    "dates": [`${PRESENTDAYFORMATTED}`, `${TOMORROWFORMATTED}`, `${DAYAFTERTOMORROWFORMATTED}`]
                 }
             });
-            const today = new Date()
 
             if (allGames.data.data.length) {
-                const closest = allGames.data.data.reduce((a, b) => new Date(a.date).getTime() - today.getTime() < new Date(b.date).getTime() - today.getTime() ? a : b);
-                return `${this.months[new Date(closest.date).getMonth()]} ${new Date(closest.date).getUTCDate()} ${closest.status}`;
+                const closest = allGames.data.data.reduce((a, b) => moment(a.date).isBefore(moment()) < moment(b.date).isBefore(moment()) ? a : b);
+                return `${this.months[moment(closest.date).month()]} ${moment(closest.date).utc().date()} ${closest.status}`;
             } else {
                 return "Unable to find closest game, probably becuase they're not playing for next few days";
             }
@@ -88,48 +87,58 @@ class Score extends Component {
     }
 
     renderThrees() {
-        if (this.state.numberOfThrees >= 12 && !this.state.previousDayGame) {
-            return (<div>
-                <h4>YES!</h4>
-                <p>{this.state.numberOfThrees}</p>
-            </div>)
-        } else if (this.state.numberOfThrees >= 12 && this.state.previousDayGame) {
-            return (<div>
-                <h4>YES!</h4>
-                <p>The Raptors scored {this.state.numberOfThrees} threes yesterday. GO GET YOUR FRIES NOW!</p>
-            </div>)
-        } else {
-            return (<div>
-                <h4>NO!</h4>
-                <p>{this.state.numberOfThrees} threes were scored. What's the point of even watching basketball?!</p>
-            </div>)
-        }
+        return this.state.numberOfThrees >= THREESNEEDED ? this.renderSuccess() : this.renderFailure() 
     }
 
-    renderEmptyState() {
-        if (this.state.gamePlayed) {
-            return (<div>
+    renderSuccess() {
+        return (
+            <div>
+                <h4>YES!</h4>
+                {this.state.previousDayGame ? (
+                    <p>The Raptors scored {this.state.numberOfThrees} threes yesterday. GO GET YOUR FRIES NOW!</p>
+                ) : (
+                    <p>The current threes total is: {this.state.numberOfThrees}!</p>
+                )}
+            </div>
+        )
+    }
+
+    renderFailure() {
+        return (
+            <div>
+                <h4>NO!</h4>
+                <p>{this.state.numberOfThrees} threes were scored. What's the point of even watching basketball?!</p>
+            </div>
+        )
+    }
+
+    renderLoadingState() {
+        return (
+            <div>
                 <p>Tabulating threes...</p>
-            </div>)
-        } else {
-            return (
-                <div>
-                    <p>Next game is: {this.state.nextGame}</p>
-                </div>
-            )
-        }
+            </div>
+        )
+    }
+
+    renderNextGame() {
+        return (
+            <div>
+                <p>Next game is: {this.state.nextGame}</p>
+            </div>
+        )
+    }
+
+    renderDefaultState() {
+        return this.state.gamePlayed ? this.renderLoadingState() : this.renderNextGame()
     }
 
     componentDidMount() {
-        const currentDay = new Date();
-        const formattedDay = `${currentDay.getFullYear()}-${currentDay.getMonth() + 1}-${currentDay.getDate()}`;
-        const formattedPreviousDay = `${currentDay.getFullYear()}-${currentDay.getMonth() + 1}-${currentDay.getDate() - 1}`;
         let priorGame = false;
 
-        const gamePromise = this.fetchGame(formattedDay, formattedPreviousDay);
+        const gamePromise = this.fetchGame();
         gamePromise.then((result) => {
             if (result.data.data.length) {
-                if (new Date(result.data.data[0].date).getDate() !== currentDay.getDate()) {
+                if (!moment(result.data.data[0].date).isSame(moment(), 'day')) {
                     priorGame = true
                 } 
 
@@ -157,7 +166,7 @@ class Score extends Component {
     render() {
         return (
             <section>
-                {this.state.numberOfThrees > 0 ? this.renderThrees() : this.renderEmptyState()}
+                {this.state.numberOfThrees > 0 ? this.renderThrees() : this.renderDefaultState()}
             </section>
         )
     }
