@@ -93,7 +93,7 @@ class Score extends Component {
     renderSuccess() {
         return (
             <div>
-                <h4>YES!</h4>
+                <h1>YES!</h1>
                 {this.state.previousDayGame ? (
                     <p>The Raptors scored {this.state.numberOfThrees} threes yesterday. GO GET YOUR FRIES NOW!</p>
                 ) : (
@@ -106,8 +106,8 @@ class Score extends Component {
     renderFailure() {
         return (
             <div>
-                <h4>NO!</h4>
-                <p>{this.state.numberOfThrees} threes were scored. What's the point of even watching basketball?!</p>
+                <h1>NO!</h1>
+                <p>Only {this.state.numberOfThrees} threes were scored. What's the point of even watching basketball?!</p>
             </div>
         )
     }
@@ -167,7 +167,7 @@ class Score extends Component {
 
     render() {
         return (
-            <section>
+            <section className="Score__Component">
                 {this.state.numberOfThrees > 0 ? this.renderThrees() : this.renderDefaultState()}
             </section>
         )

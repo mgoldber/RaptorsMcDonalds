@@ -1,15 +1,22 @@
 import React, { Component } from 'react';
+import Header from './components/Header.js';
 import Score from './components/Score.js';
+import Footer from './components/Footer.js';
 import './styles/styles.scss';
 
 class App extends Component {
   render() {
     return (
-      <main className="wrapper">
-        <h1>Did the raps score enough?</h1>
-        <Score />
+      <div className="App_Component">
+        <Header 
+          title="Did the raps score enough?"
+        />
+        <main className="wrapper">
+          <Score />
 
-      </main>
+        </main>
+        <Footer />
+      </div>
     );
   }
 }

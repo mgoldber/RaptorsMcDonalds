@@ -1,0 +1,18 @@
+.Score__Component {
+    padding: 100px 50px 20px 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    h1 {
+        font-size: 80px;
+    }
+
+    h1, p {
+        text-align: center;
+    }
+
+    p {
+        font-size: 40px;
+    }
+}
