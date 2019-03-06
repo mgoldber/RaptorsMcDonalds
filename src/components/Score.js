@@ -155,12 +155,14 @@ class Score extends Component {
             }
         });
         
-        const nextGamePromise = this.fetchNextGame();
-        nextGamePromise.then((result) => {
-            this.setState({
-                nextGame: result
-            })
-        });
+        if (!this.state.gamePlayed) {
+            const nextGamePromise = this.fetchNextGame();
+            nextGamePromise.then((result) => {
+                this.setState({
+                    nextGame: result
+                })
+            });
+        }
     }
 
     render() {
