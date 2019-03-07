@@ -76,7 +76,7 @@ class Score extends Component {
 
             if (allGames.data.data.length) {
                 const closest = allGames.data.data.reduce((a, b) => moment(a.date).isBefore(moment()) < moment(b.date).isBefore(moment()) ? a : b);
-                return `${this.months[moment(closest.date).month()]} ${moment(closest.date).utc().date()} ${closest.status}`;
+                return `${this.months[moment(closest.date).month()]} ${moment(closest.date).utc().date()}, ${closest.status}`;
             } else {
                 return "Unable to find closest game, probably becuase they're not playing for next few days";
             }
@@ -123,7 +123,8 @@ class Score extends Component {
     renderNextGame() {
         return (
             <div>
-                <p>Next game is: {this.state.nextGame}</p>
+                <h1>Next game is: </h1>
+                <p>{this.state.nextGame}</p>
             </div>
         )
     }
