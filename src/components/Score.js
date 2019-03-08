@@ -73,9 +73,8 @@ class Score extends Component {
                     "dates": [`${PRESENTDAYFORMATTED}`, `${TOMORROWFORMATTED}`, `${DAYAFTERTOMORROWFORMATTED}`]
                 }
             });
-
             if (allGames.data.data.length) {
-                const closest = allGames.data.data.reduce((a, b) => moment(a.date).isBefore(moment()) < moment(b.date).isBefore(moment()) ? a : b);
+                const closest = allGames.data.data.reduce((a, b) => moment(a.date).diff(moment(b.date)) < moment(b.date).diff(moment(a.date)) ? a : b);
                 return `${this.months[moment(closest.date).month()]} ${moment(closest.date).utc().date()}, ${closest.status}`;
             } else {
                 return "Unable to find closest game, probably becuase they're not playing for next few days";
