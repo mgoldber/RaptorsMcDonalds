@@ -3,13 +3,12 @@ import axios from 'axios';
 import moment from 'moment';
 import { BALLDONTLIEGAME_API_URL, BALLDONTLIESTAT_API_URL } from '../constants/balldontlie_api';
 import { RAPTORSID, THREESNEEDED } from '../constants/raptors';
-import { PRESENTDAYFORMATTED, YESTERDAYFORMATTED, TOMORROWFORMATTED, DAYAFTERTOMORROWFORMATTED } from '../constants/date';
+import { PRESENTDAYFORMATTED, YESTERDAYFORMATTED, TOMORROWFORMATTED, DAYAFTERTOMORROWFORMATTED, MONTHS } from '../constants/date';
 
 class Score extends Component {
 
     constructor(props) {
         super(props);
-        this.months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUNE", "JULY", "AUG", "SEPT", "OCT", "NOV", "DEC"]
         this.state = {
             numberOfThrees: 0,
             gameID: 0,
@@ -75,7 +74,7 @@ class Score extends Component {
             });
             if (allGames.data.data.length) {
                 const closest = allGames.data.data.reduce((a, b) => moment(a.date).diff(moment(b.date)) < moment(b.date).diff(moment(a.date)) ? a : b);
-                return `${this.months[moment(closest.date).month()]} ${moment(closest.date).utc().date()}, ${closest.status}`;
+                return `${MONTHS[moment(closest.date).month()]} ${moment(closest.date).utc().date()}, ${closest.status}`;
             } else {
                 return "Unable to find closest game, probably becuase they're not playing for next few days";
             }
