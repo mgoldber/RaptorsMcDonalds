@@ -42,6 +42,10 @@
             display: flex;
             li {
                 list-style: none;
+                .taco {
+                  min-width: 90px;
+                  max-width: 110px;
+                }
             }
         }
     }

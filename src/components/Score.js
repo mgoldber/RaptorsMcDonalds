@@ -14,6 +14,7 @@ class Score extends Component {
             gameID: 0,
             gamePlayed: true,
             previousDayGame: false,
+            stolenOnRoad: false,
             nextGame: ""
         }
     }
@@ -63,6 +64,18 @@ class Score extends Component {
         }
     }
 
+    async fetchTacos(game) {
+        try {
+            if (game.data.data[0].home_team.id !== RAPTORSID && game.data.data[0].visitor_team_score > game.data.data[0].home_team_score) {
+                this.setState({
+                    stolenOnRoad: true
+                })
+            }
+        } catch (error) {
+            console.log(error.message);
+        }
+    }
+
     async fetchNextGame() {
         try {            
             const allGames = await axios.get(`${BALLDONTLIEGAME_API_URL}`, {
@@ -97,6 +110,15 @@ class Score extends Component {
                 ) : (
                     <p>The current threes total is: {this.state.numberOfThrees}!</p>
                 )}
+            </div>
+        )
+    }
+
+    renderTacoBell() {
+        return (
+            <div>
+                <h1>YES!</h1>
+                <p>The Raptors stole one on the road! Head over to Taco Bell!</p>
             </div>
         )
     }
@@ -146,6 +168,7 @@ class Score extends Component {
                     previousDayGame: priorGame
                 }, () => {
                     this.fetchThrees();
+                    this.fetchTacos(result);
                 })
             } else { // If API is not returning anything, there isn't a game happening today
                 this.setState({
@@ -166,6 +189,7 @@ class Score extends Component {
         return (
             <section className="Score__Component">
                 {this.state.numberOfThrees > 0 ? this.renderThrees() : this.renderDefaultState()}
+                {this.state.stolenOnRoad ? this.renderTacoBell() : null}
             </section>
         )
     }
