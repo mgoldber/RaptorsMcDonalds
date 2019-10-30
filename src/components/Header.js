@@ -12,7 +12,7 @@ const Header = (props) => {
                 <ul>
                     <li><img src={rapLogo}  alt="Raptors Logo" /></li>
                     <li><img src={mcLogo} alt="McDonalds Logo" /></li>
-                    <li ><img class="taco" src={taco} alt="Taco Bell Logo" /></li>
+                    <li ><img className="taco" src={taco} alt="Taco Bell Logo" /></li>
                 </ul>
             </nav>
         </header>
