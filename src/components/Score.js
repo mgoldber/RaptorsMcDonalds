@@ -11,10 +11,10 @@ class Score extends Component {
         super(props);
         this.state = {
             numberOfThrees: 0,
+            topPerformers: [],
             gameID: 0,
             gamePlayed: true,
             previousDayGame: false,
-            stolenOnRoad: false,
             nextGame: ""
         }
     }
@@ -23,7 +23,7 @@ class Score extends Component {
         try {
             const currentGame = await axios.get(`${BALLDONTLIEGAME_API_URL}`, {
                 params: {
-                    "dates": [`${PRESENTDAYFORMATTED}`, `${YESTERDAYFORMATTED}`],
+                    "dates": [`2019-10-28`,`${PRESENTDAYFORMATTED}`, `${YESTERDAYFORMATTED}`],
                     "team_ids": [RAPTORSID]
                 }
             });
@@ -40,18 +40,26 @@ class Score extends Component {
                     "game_ids": [this.state.gameID],
                 }
             });
-
             if (numberOfThrees.data.data.length) {
-                let threesMade = numberOfThrees.data.data.filter((playerStats) => {
+                let raptorsStats = numberOfThrees.data.data.filter((playerStats) => {
                     return playerStats.team.abbreviation === "TOR"
-                }).map((playerStats) => {
+                })
+                
+                let totalThrees = raptorsStats.map((playerStats) => {
+                    console.log(playerStats);
                     return playerStats.fg3m;
                 }).reduce((sum, threesMade) => {
                     return sum + threesMade;
                 });
+
+                let topScorerValue = Math.max.apply(Math, raptorsStats.map(function(o) {return o.fg3m}))
+                let allTopScorers = raptorsStats.filter(function(o) { return o.fg3m === topScorerValue })
+
+                console.log(allTopScorers);
     
                 this.setState({
-                    numberOfThrees: threesMade
+                    numberOfThrees: totalThrees,
+                    topPerformers: allTopScorers
                 });
             } else {
                 this.setState({
@@ -64,24 +72,12 @@ class Score extends Component {
         }
     }
 
-    async fetchTacos(game) {
-        try {
-            if (game.data.data[0].home_team.id !== RAPTORSID && game.data.data[0].visitor_team_score > game.data.data[0].home_team_score) {
-                this.setState({
-                    stolenOnRoad: true
-                })
-            }
-        } catch (error) {
-            console.log(error.message);
-        }
-    }
-
     async fetchNextGame() {
         try {            
             const allGames = await axios.get(`${BALLDONTLIEGAME_API_URL}`, {
                 params: {
                     "team_ids": [RAPTORSID],
-                    "seasons": [moment().subtract(1, 'year').year()],
+                    "seasons": [moment().year()],
                     "dates": [`${PRESENTDAYFORMATTED}`, `${TOMORROWFORMATTED}`, `${DAYAFTERTOMORROWFORMATTED}`]
                 }
             });
@@ -102,11 +98,19 @@ class Score extends Component {
     }
 
     renderSuccess() {
+        const playersWhoHelped = this.state.topPerformers.map((playerStats) => {
+            return (
+                <p>{playerStats.player.first_name} {playerStats.player.last_name} is a true hero here. They made {playerStats.fg3m} three pointers to contribute to the fries goal.</p>
+            )
+        })
         return (
             <div>
                 <h1>YES!</h1>
                 {this.state.previousDayGame ? (
-                    <p>The Raptors scored {this.state.numberOfThrees} threes yesterday. GO GET YOUR FRIES NOW!</p>
+                    <div>
+                        <p>The Raptors scored {this.state.numberOfThrees} threes yesterday. GO GET YOUR FRIES NOW!</p>
+                        { playersWhoHelped }
+                    </div>
                 ) : (
                     <p>The current threes total is: {this.state.numberOfThrees}!</p>
                 )}
@@ -114,20 +118,17 @@ class Score extends Component {
         )
     }
 
-    renderTacoBell() {
-        return (
-            <div>
-                <h1>YES!</h1>
-                <p>The Raptors stole one on the road! Head over to Taco Bell!</p>
-            </div>
-        )
-    }
-
     renderFailure() {
+        const playersWhoHelped = this.state.topPerformers.map((playerStats) => {
+            return (
+                <p>{playerStats.player.first_name} {playerStats.player.last_name} did all he could with {playerStats.fg3m} made three pointers.</p>
+            )
+        })
         return (
             <div>
                 <h1>NO!</h1>
                 <p>Only {this.state.numberOfThrees} threes were scored. What's the point of even watching basketball?!</p>
+                { playersWhoHelped }
             </div>
         )
     }
@@ -168,7 +169,6 @@ class Score extends Component {
                     previousDayGame: priorGame
                 }, () => {
                     this.fetchThrees();
-                    this.fetchTacos(result);
                 })
             } else { // If API is not returning anything, there isn't a game happening today
                 this.setState({
@@ -189,7 +189,6 @@ class Score extends Component {
         return (
             <section className="Score__Component">
                 {this.state.numberOfThrees > 0 ? this.renderThrees() : this.renderDefaultState()}
-                {this.state.stolenOnRoad ? this.renderTacoBell() : null}
             </section>
         )
     }
