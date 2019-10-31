@@ -15,7 +15,29 @@ class Score extends Component {
             gameID: 0,
             gamePlayed: true,
             previousDayGame: false,
-            nextGame: ""
+            nextGame: "",
+            playerPhoto: null
+        }
+    }
+
+    async createPlayerHeadshotUrl() {
+        let urlCreator = window.URL || window.webkitURL;
+        let url = ''
+        try {
+            await axios({
+                method: 'get',
+                url: `https://nba-players.herokuapp.com/players/lowry/kyle`,
+                responseType: 'blob'
+            }).then(function(response) {
+                url = urlCreator.createObjectURL(response.data)
+            })
+
+            this.setState({
+                playerPhoto: url
+            })
+            
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -46,7 +68,6 @@ class Score extends Component {
                 })
                 
                 let totalThrees = raptorsStats.map((playerStats) => {
-                    console.log(playerStats);
                     return playerStats.fg3m;
                 }).reduce((sum, threesMade) => {
                     return sum + threesMade;
@@ -54,8 +75,6 @@ class Score extends Component {
 
                 let topScorerValue = Math.max.apply(Math, raptorsStats.map(function(o) {return o.fg3m}))
                 let allTopScorers = raptorsStats.filter(function(o) { return o.fg3m === topScorerValue })
-
-                console.log(allTopScorers);
     
                 this.setState({
                     numberOfThrees: totalThrees,
@@ -129,6 +148,7 @@ class Score extends Component {
                 <h1>NO!</h1>
                 <p>Only {this.state.numberOfThrees} threes were scored. What's the point of even watching basketball?!</p>
                 { playersWhoHelped }
+                <img src={this.state.playerPhoto} />
             </div>
         )
     }
@@ -169,6 +189,7 @@ class Score extends Component {
                     previousDayGame: priorGame
                 }, () => {
                     this.fetchThrees();
+                    this.createPlayerHeadshotUrl();
                 })
             } else { // If API is not returning anything, there isn't a game happening today
                 this.setState({
