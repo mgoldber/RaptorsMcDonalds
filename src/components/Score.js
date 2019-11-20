@@ -22,11 +22,14 @@ class Score extends Component {
 
     async createPlayerHeadshotUrl() {
         let urlCreator = window.URL || window.webkitURL;
-        let url = ''
+        let url = '';
+
+        const { player: {first_name, last_name} } = this.state.topPerformers[0];
+
         try {
             await axios({
                 method: 'get',
-                url: `https://nba-players.herokuapp.com/players/lowry/kyle`,
+                url: `https://nba-players.herokuapp.com/players/${last_name.toLowerCase()}/${first_name.toLowerCase()}`,
                 responseType: 'blob'
             }).then(function(response) {
                 url = urlCreator.createObjectURL(response.data)
@@ -35,7 +38,7 @@ class Score extends Component {
             this.setState({
                 playerPhoto: url
             })
-            
+
         } catch (error) {
             console.log(error);
         }
@@ -49,6 +52,7 @@ class Score extends Component {
                     "team_ids": [RAPTORSID]
                 }
             });
+
             return currentGame;
         } catch (error) {
             console.log(`Unable to get the current game: ${error.message}`);
@@ -66,7 +70,8 @@ class Score extends Component {
                 let raptorsStats = numberOfThrees.data.data.filter((playerStats) => {
                     return playerStats.team.abbreviation === "TOR"
                 })
-                
+                console.log("rapt stats", raptorsStats);
+
                 let totalThrees = raptorsStats.map((playerStats) => {
                     return playerStats.fg3m;
                 }).reduce((sum, threesMade) => {
@@ -74,8 +79,11 @@ class Score extends Component {
                 });
 
                 let topScorerValue = Math.max.apply(Math, raptorsStats.map(function(o) {return o.fg3m}))
+                console.log("top scorer", topScorerValue);
+
+
                 let allTopScorers = raptorsStats.filter(function(o) { return o.fg3m === topScorerValue })
-    
+
                 this.setState({
                     numberOfThrees: totalThrees,
                     topPerformers: allTopScorers
@@ -92,7 +100,7 @@ class Score extends Component {
     }
 
     async fetchNextGame() {
-        try {            
+        try {
             const allGames = await axios.get(`${BALLDONTLIEGAME_API_URL}`, {
                 params: {
                     "team_ids": [RAPTORSID],
@@ -106,14 +114,14 @@ class Score extends Component {
             } else {
                 return "Unable to find closest game, probably becuase they're not playing for next few days";
             }
-           
+
         } catch (error) {
             console.log("Experienced error fetching next game");
         }
     }
 
     renderThrees() {
-        return this.state.numberOfThrees >= THREESNEEDED ? this.renderSuccess() : this.renderFailure() 
+        return this.state.numberOfThrees >= THREESNEEDED ? this.renderSuccess() : this.renderFailure()
     }
 
     renderSuccess() {
@@ -182,14 +190,13 @@ class Score extends Component {
             if (result.data.data.length) {
                 if (!moment(result.data.data[0].date).isSame(moment(), 'day')) {
                     priorGame = true
-                } 
+                }
 
                 this.setState({
                     gameID: result.data.data[0].id,
                     previousDayGame: priorGame
                 }, () => {
-                    this.fetchThrees();
-                    this.createPlayerHeadshotUrl();
+                    this.fetchThrees().then( meow => this.createPlayerHeadshotUrl());
                 })
             } else { // If API is not returning anything, there isn't a game happening today
                 this.setState({
@@ -197,7 +204,7 @@ class Score extends Component {
                 });
             }
         });
-        
+
         const nextGamePromise = this.fetchNextGame();
         nextGamePromise.then((result) => {
             this.setState({
